@@ -52,3 +52,32 @@ Scratchpad for the team: logistics, open questions, links, ideas that are not in
 - Proof Engine with the YouTube Data API
 - Gemini Live voice briefs, Nano Banana thumbnails, Lyria music
 - Editor onboarding, chat, notifications, auth
+
+## Security TODOs (before any public / production use)
+
+Found 2026-11-20 by a local security pass (live probing of `localhost:8080` + code review).
+The gstack `/cso` helper couldn't run here (needs Docker + a git snapshot it was denied), so this
+was done by hand. Verified **safe**: SQL injection, path traversal, mass assignment (client can't
+set price/status/payout), secret logging, CORS. Functional happy path passed 23/23 (`smoke.sh`).
+
+Findings 1, 2 and 5 share one root cause: **there is no auth or per-user ownership** (listed as
+out of scope in `PRD.md`). Fine for the buildathon demo; must be fixed before the app is public,
+including the Cloud Run URL if it is shared.
+
+- [ ] **High — No authz + enumerable IDs.** `GET /orders` returns every order unauthenticated;
+  order ids are sequential (`BMT-<2481+count>`, `orders.py`), so they can be walked. Exposes each
+  client's note, brief, totals and payout. Fix: auth + ownership filter on orders, briefs, uploads.
+- [ ] **High — Unauthenticated, unthrottled paid Gemini calls.** `POST /briefs` and
+  `POST /orders/{id}/review` each make a live Gemini call with no auth or rate limit → cost-DoS
+  once a key is set. Fix: auth + per-IP/user rate limit on the AI endpoints.
+- [ ] **Med — Upload size checked only after the full body is buffered** (`uploads.py`); no
+  streaming cap, and if `file.size` is `None` the check is skipped. `media.py` also reads the whole
+  file into memory. Fix: a streaming size limit (reverse proxy or middleware).
+- [ ] **Med — Config disclosure in errors.** AI errors return verbatim to the client, naming env
+  vars and `backend/.env`; the 422 handler echoes submitted values. Fix: generic client message,
+  log the detail server-side. (No stack traces leak.)
+- [ ] **Low — `PUT /briefs/{id}` overwritable by anyone** (same no-auth class; brief ids are
+  random so less enumerable; placed orders snapshot the brief, so they're unaffected).
+- [ ] **Low — No security headers** (no `X-Frame-Options`/CSP → clickjackable, no nosniff).
+  Fix: a small headers middleware.
+- [ ] **Low — `OrderRequest.addons` is unbounded** (`models.py`); add a `max_length`.
