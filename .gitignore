@@ -1,0 +1,27 @@
+# Secrets
+.env
+*.env
+!.env.example
+*service-account*.json
+*credentials*.json
+
+# Local data: uploads and SQLite
+data/
+*.db
+*.db-journal
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Logs
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
