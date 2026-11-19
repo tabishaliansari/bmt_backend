@@ -1,9 +1,11 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
+from app import repo
 from app.db import get_db
-from app.models import Editor
+from app.models import Catalog, Editor
+from app.seed import CATALOG
 
-router = APIRouter(prefix="/editors", tags=["editors"])
+router = APIRouter(tags=["editors"])
 
 
 def matches_query(editor: Editor, q: str) -> bool:
@@ -13,7 +15,7 @@ def matches_query(editor: Editor, q: str) -> bool:
     return q.lower() in haystack.lower()
 
 
-@router.get("")
+@router.get("/editors")
 def list_editors(category: str | None = None, q: str | None = None) -> list[Editor]:
     editors = [Editor.model_validate(d) for d in get_db().list("editors")]
     if category:
@@ -23,9 +25,20 @@ def list_editors(category: str | None = None, q: str | None = None) -> list[Edit
     return editors
 
 
-@router.get("/{editor_id}")
+@router.get("/editors/recommended")
+def recommended_editors(brief_id: str) -> list[Editor]:
+    """Editors in the brief's recommended category, best rated first. Declared before /{editor_id}."""
+    category = repo.get_brief(brief_id).result.recommended_package.category
+    editors = list_editors(category=category)
+    return sorted(editors, key=lambda e: (e.rating, e.rating_count), reverse=True)
+
+
+@router.get("/editors/{editor_id}")
 def get_editor(editor_id: str) -> Editor:
-    data = get_db().get("editors", editor_id)
-    if data is None:
-        raise HTTPException(404, f"No editor with id '{editor_id}'")
-    return Editor.model_validate(data)
+    return repo.get_editor(editor_id)
+
+
+@router.get("/addons")
+def get_catalog() -> Catalog:
+    """Add-ons and the rush fee, so the UI shows the same prices the server charges."""
+    return CATALOG

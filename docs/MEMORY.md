@@ -49,8 +49,36 @@ decisions under **Decisions** with a date. Keep it short; move detail to other d
   to serve mock data instead. This is the demo fallback.
 - 2026-11-20: Uploads accept a video MIME from the request, or one guessed from the file
   extension (curl sends `application/octet-stream`). Too large → 413, not a video → 415.
-- 2026-11-20: Still mocked in `api.js` until their phase: categories, quick packages,
-  add-ons and rush fee (Phase 3 pricing), orders, quotes.
+- 2026-11-20: Every Gemini call goes through `ai/structured.py::generate_json()`: JSON mode +
+  Pydantic `response_schema`, one retry on unreadable JSON, `AIError` → 502 `ai_error`,
+  `AITimeout` → 504 `ai_timeout`. Timeout is `AI_TIMEOUT_SEC` (default 90) on the client.
+- 2026-11-20: Video to Gemini: inline up to `INLINE_VIDEO_MAX_MB` (15), Files API above that in
+  local mode. Vertex + large clip raises a clear error until Phase 8 adds `gs://`.
+- 2026-11-20: `recommended_package.category` is limited to the editors' 6 categories, so
+  `/editors/recommended` always has something to match. Clips are labelled
+  `Clip <upload_id> (<filename>)` so best moments point at the right clip.
+- 2026-11-20: `POST /briefs` waits for Gemini and returns the finished brief (no background
+  job). Only `raw` uploads are accepted; a `cut` returns 422.
+- 2026-11-20: Still mock in both modes (not in MVP scope): categories, quick packages,
+  courses, posts, mentors, the editor studio, credits lookup, chat.
+- 2026-11-20: Add-ons and the rush fee live in `seed.py::CATALOG` (INR + USD) and are served by
+  `GET /addons`. Captions = $2.00, so Reel + captions = $14.99 as in `API.md`.
+- 2026-11-20: Order ids are `BMT-<2481 + count>`. `due_at` = now + package `eta_hours`
+  (24 h if rush). Revisions: 2, or 3 with the "revision" add-on.
+- 2026-11-20: Order statuses map to the UI as funded/in_progress → "editing", review, approved.
+  Only `payments/escrow.py::transition()` changes status; bad transitions return 409.
+- 2026-11-20: Orders keep a copy of the brief result (`order.brief`), so later brief edits
+  don't change an order already placed. The brief is optional on an order.
+- 2026-11-20: Review notes: `source` is set by the server (`ai` from Review Copilot, `client`
+  from the feedback rewriter), never by Gemini. Re-running the review keeps `client` notes.
+  Pinned notes from the review player are separate: `order.client_notes` (`t`, `text`).
+- 2026-11-20: The demo "Upload the editor's cut" button on the order screen uploads a `cut`
+  and calls `/deliver`; it stands in for the editor app. The review player plays the real cut
+  from `GET /uploads/{id}/content`.
+- 2026-11-20: The active brief (the one being ordered for) is kept in localStorage `bmt:brief`
+  and cleared once an order is placed with it. The storefront picks the matching package by
+  word overlap with `package_title`, falling back to the "best" package in that category.
+- 2026-11-20: All text from users or Gemini goes through `BMT.ui.esc()` before `innerHTML`.
 
 ## Glossary
 
@@ -70,5 +98,16 @@ _(Append here: SDK quirks, model limits, things that broke and how we fixed them
   `StaticFiles` mount. Register it for `starlette.exceptions.HTTPException` instead.
 - Starlette reads the whole multipart body before the handler runs, so the upload size
   limit is checked on `UploadFile.size` after receipt, not while streaming.
-- Phase 2: declare `GET /editors/recommended` before `GET /editors/{editor_id}` in
-  `routers/editors.py`, or "recommended" is matched as an editor id.
+- `GET /editors/recommended` must stay declared before `GET /editors/{editor_id}`, or
+  "recommended" is matched as an editor id.
+- `google-genai` 3.x uses `httpx2` (a fork of httpx), not `httpx`, so `import httpx` fails.
+  `structured.py` catches the timeout error of whichever one is installed.
+- Settings and the Gemini client are cached: after editing `.env`, restart uvicorn.
+- Keep Python 3.11 syntax (`TypeVar`, not `def f[T]`); the Dockerfile may use 3.11/3.12.
+- Browser-recorded WebM (MediaRecorder) reports `duration = Infinity`, and in the app's
+  built-in browser even 0 after the usual seek-to-end trick. The review player then keeps its
+  0:58 placeholder. Real MP4/MOV files are fine. Use real MP4s for the demo.
+- Testing without a Gemini key: run the UI with `?mocks=1`, or write a brief/review straight
+  into the DB from a throwaway script. Never add a fake-AI mode to the product code.
+- Scripted `el.focus()`/`blur()` does nothing while the page isn't focused (e.g. a hidden
+  browser pane), so inline-edit saves look broken in automated tests. Dispatch the event instead.

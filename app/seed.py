@@ -1,11 +1,11 @@
-"""Demo editors and packages, ported from mock-ui/js/api.js.
+"""Demo editors, packages and add-ons, ported from mock-ui/js/api.js.
 
 INR prices are the mock's prices. USD prices are set by hand (about INR / 84, ending in .99).
 Written to the database on every startup, so edits here apply after a restart.
 """
 
 from app.db.base import Database
-from app.models import Credit, Editor, Package, Review
+from app.models import Addon, Catalog, Credit, Editor, Package, Review
 
 
 def pkg(editor_id: str, id: str, title: str, desc: str, inr: float, usd: float,
@@ -119,6 +119,18 @@ EDITORS: list[Editor] = [
         work=[8, 1],
     ),
 ]
+
+
+CATALOG = Catalog(
+    addons=[
+        Addon(id="captions", icon="cc", title="Animated captions", sub="Word-by-word, on-brand", price_inr=199, price_usd=2.00),
+        Addon(id="thumb", icon="image", title="Custom thumbnail", sub="1 design, 2 options", price_inr=149, price_usd=1.79),
+        Addon(id="music", icon="music", title="Licensed music", sub="Royalty-free track", price_inr=99, price_usd=1.19),
+        Addon(id="revision", icon="repeat", title="Extra revision", sub="3 rounds instead of 2", price_inr=99, price_usd=1.19),
+    ],
+    rush_fee_inr=300,
+    rush_fee_usd=3.59,
+)
 
 
 def seed(db: Database) -> None:

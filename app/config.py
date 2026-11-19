@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     use_vertex: bool = False
     gcp_project: str = ""
     vertex_location: str = "us-central1"
+    ai_timeout_sec: int = 90
+    inline_video_max_mb: int = 15
 
     # Storage and database
     storage: Literal["local", "gcs"] = "local"

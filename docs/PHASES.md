@@ -19,32 +19,36 @@ If a phase runs past its timebox, cut scope inside it rather than skipping ahead
 - **Done when:** frontend Discover and storefront load editors from the backend.
 
 ### Phase 2 · Brief Builder (60 min)
-- [ ] `prompts/brief_builder.md` + `BriefResult` Pydantic schema
-- [ ] `ai/client.py`, `ai/media.py`, `ai/brief_builder.py` with structured output
-- [ ] `POST /briefs`, `GET /briefs/{id}`, `GET /editors/recommended`
-- [ ] Tested on 2–3 of Mustafa's real clips; Mustafa says the brief is useful
+- [x] `prompts/brief_builder.md` + `BriefResult` Pydantic schema
+- [x] `ai/client.py`, `ai/media.py`, `ai/brief_builder.py` with structured output
+- [x] `POST /briefs`, `GET /briefs/{id}`, `GET /editors/recommended`
+- [ ] Tested on 2–3 of Mustafa's real clips; Mustafa says the brief is useful (blocked: needs `GEMINI_*` in `.env`)
 - **Done when:** a real clip produces a sensible brief JSON in under ~60 s.
 
 ### Phase 3 · Orders and escrow (30 min)
-- [ ] Order model, escrow state machine, server-side pricing
-- [ ] `POST /orders`, `GET /orders`, `GET /orders/{id}`, `POST /orders/{id}/deliver`, `POST /orders/{id}/approve` (payout record)
+- [x] Order model, escrow state machine, server-side pricing
+- [x] `POST /orders`, `GET /orders`, `GET /orders/{id}`, `POST /orders/{id}/deliver`, `POST /orders/{id}/approve` (payout record)
+- Done: verified by `scripts/smoke.sh` (14.99 USD total, payout 12.74 USD = 1,071.43 INR).
 - **Done when:** an order moves funded → review → approved with a payout record, via curl.
 
 ### Phase 4 · Review Copilot (60 min)
-- [ ] `prompts/review_copilot.md`, `prompts/feedback_rewriter.md`, `ReviewResult` schema
-- [ ] `POST /orders/{id}/review` with optional `client_feedback`
+- [x] `prompts/review_copilot.md`, `prompts/feedback_rewriter.md`, `ReviewResult` schema
+- [x] `POST /orders/{id}/review` with optional `client_feedback`
+- [ ] Mustafa agrees with the notes on a real cut (blocked: needs `GEMINI_*` in `.env`)
 - **Done when:** a finished edit reviewed against its brief returns a score, checklist and
   timestamped notes that Mustafa agrees with.
 
 ### Phase 5 · Frontend wiring (90 min)
-- [ ] `api.js` calls the backend (keep a `BMT_USE_MOCKS` fallback)
-- [ ] New screens from `DESIGN.md`: Start with your footage, Brief result, AI review panel, payout receipt
-- [ ] Order uses the brief; storefront shows "Matches your brief"
+- [x] `api.js` calls the backend (keep a `BMT_USE_MOCKS` fallback)
+- [x] New screens from `DESIGN.md`: Start with your footage, Brief result, AI review panel, payout receipt
+- [x] Order uses the brief; storefront shows "Matches your brief"
+- Checked in the browser, phone (375 px) and desktop, light and dark: full flow in `?mocks=1`;
+  live flow end to end with the two Gemini steps showing their error state (no key yet).
 - **Done when:** the full happy path in `PRD.md` works in the browser, phone and desktop layouts.
 
 ### Phase 6 · Local end-to-end check (20 min)
-- [ ] Run the happy path twice from a clean DB with different clips
-- [ ] Commit and push. Tag `mvp-local`.
+- [ ] Run the happy path twice from a clean DB with different clips (with real Gemini: still to do)
+- [ ] Commit and push. Tag `mvp-local`. (the team does git)
 - **Done when:** a teammate can clone, follow `README.md`, and run it.
 
 ## Day 1 (Fri 20 Nov): Google Cloud

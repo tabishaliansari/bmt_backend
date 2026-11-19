@@ -4,6 +4,8 @@ import shutil
 from pathlib import Path
 from typing import BinaryIO
 
+from starlette.responses import FileResponse, Response
+
 
 class LocalStorage:
     def __init__(self, root: Path) -> None:
@@ -17,3 +19,6 @@ class LocalStorage:
 
     def read(self, storage_path: str) -> bytes:
         return (self.root / storage_path).read_bytes()
+
+    def media_response(self, storage_path: str, mime: str) -> Response:
+        return FileResponse(self.root / storage_path, media_type=mime)

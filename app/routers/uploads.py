@@ -4,9 +4,10 @@ from datetime import UTC, datetime
 from pathlib import PurePath
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from starlette.responses import Response
 
+from app import repo
 from app.config import get_settings
-from app.db import get_db
 from app.models import Upload, UploadKind, UploadOut
 from app.storage import get_storage
 
@@ -37,5 +38,12 @@ def create_upload(file: UploadFile = File(...), kind: UploadKind = Form(...)) ->
         id=upload_id, kind=kind, filename=filename, mime=mime, size=file.size or 0,
         storage_path=storage_path, created_at=datetime.now(UTC),
     )
-    get_db().put("uploads", upload.id, upload.model_dump(mode="json"))
+    repo.save("uploads", upload)
     return UploadOut.model_validate(upload.model_dump())
+
+
+@router.get("/{upload_id}/content")
+def get_upload_content(upload_id: str) -> Response:
+    """Streams the video so the review player can play and seek it."""
+    upload = repo.get_upload(upload_id)
+    return get_storage().media_response(upload.storage_path, upload.mime)

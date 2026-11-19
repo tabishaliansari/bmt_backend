@@ -19,6 +19,9 @@ Docs: `docs/PRD.md` (what and why), `docs/ARCHITECTURE.md` (how), `docs/API.md` 
 
 ## Run locally
 
+Clone `backend/` and `frontend/` side by side (the backend serves `../frontend` at `/`).
+
+macOS / Linux:
 ```bash
 cd backend
 python3 -m venv .venv && source .venv/bin/activate
@@ -27,7 +30,24 @@ cp .env.example .env        # add GEMINI_API_KEY and the model IDs
 uvicorn app.main:app --reload --port 8080
 ```
 
+Windows (PowerShell):
+```powershell
+cd backend
+python -m venv .venv; .venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+copy .env.example .env      # add GEMINI_API_KEY and the model IDs
+uvicorn app.main:app --reload --port 8080
+```
+
 Open http://localhost:8080. The API is under `/api/v1`, health at `/api/v1/healthz`.
+After editing `.env`, restart uvicorn (settings are read once).
+
+- **Check it works:** `bash scripts/smoke.sh` walks every endpoint with curl. Add
+  `SMOKE_CLIP=path/to/clip.mp4` to also run the Gemini steps (brief, review, feedback).
+- **Demo fallback:** http://localhost:8080/?mocks=1 runs the whole UI on mock data with
+  canned Gemini results, no backend calls.
+- **Clean demo data:** stop uvicorn, delete `data/bmt.db` and `data/uploads/`, start again.
+  In the browser, You → Reset demo data clears local favourites and the active brief.
 
 ## Run on Google Cloud
 
