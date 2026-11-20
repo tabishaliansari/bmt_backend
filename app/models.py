@@ -209,11 +209,28 @@ class TimelineEvent(BaseModel):
 
 
 class Payout(BaseModel):
+    """Simulated Ramp payout to the editor, in INR."""
     amount_usd: float
     fx_rate: float
     amount_inr: float
+    gross_usd: float = 0  # what the client paid
+    fee_usd: float = 0  # BMT platform fee kept on approval
+    fee_pct: float = 0
+    transfer_id: str = ""  # simulated Ramp transfer reference
+    eta: str = "About 1 business day"
     rail: Literal["ramp"] = "ramp"
     status: Literal["simulated"] = "simulated"
+    at: datetime
+
+
+class Payment(BaseModel):
+    """Simulated client payment that funds escrow. No card data is ever collected."""
+    method: str  # display label, e.g. "Test card ending 4242"
+    amount_usd: float
+    amount_inr: float
+    reference: str  # simulated processor reference
+    status: Literal["held"] = "held"
+    simulated: bool = True
     at: datetime
 
 
@@ -229,6 +246,7 @@ class OrderRequest(BaseModel):
     addons: list[str] = Field(default=[], max_length=10)
     rush: bool = False
     note: str = Field(default="", max_length=2000)
+    payment_method: Literal["demo_card", "demo_upi"] = "demo_card"
 
 
 class DeliverRequest(BaseModel):
@@ -256,6 +274,7 @@ class Order(BaseModel):
     cut_upload_id: str | None = None
     review: ReviewResult | None = None
     client_notes: list[ClientNote] = []
+    payment: Payment | None = None
     payout: Payout | None = None
     timeline: list[TimelineEvent]
     created_at: datetime

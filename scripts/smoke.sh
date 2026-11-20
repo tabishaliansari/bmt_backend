@@ -75,6 +75,7 @@ check "order: server prices it" 201 '"total_usd":14.99' "${A[@]}" -H "$JSON" \
 ORDER="$(id_from_body BMT-)"
 [[ "$ORDER" =~ ^BMT-[A-Z2-9]{8}$ ]] && echo "PASS  order id is random ($ORDER)" || { echo "FAIL  order id format: $ORDER"; FAILED=1; }
 check "order: starts funded"    200 '"status":"funded"'  "${A[@]}" "$BASE/orders/$ORDER"
+check "order: payment recorded" 200 '"reference":"PAY-SIM-' "${A[@]}" "$BASE/orders/$ORDER"
 check "order: can't approve yet" 409 '"error"'           "${A[@]}" -X POST "$BASE/orders/$ORDER/approve"
 check "order: unknown add-on"   422 '"error"'            "${A[@]}" -H "$JSON" -d '{"editor_id":"riya","package_id":"reel","addons":["gold"]}' "$BASE/orders"
 check "upload a cut"            201 '"kind":"cut"'       "${A[@]}" -F "file=@$TMP/clip.mp4" -F kind=cut "$BASE/uploads"
@@ -86,6 +87,8 @@ check "cut streams via link"    206 ''                   -H 'Range: bytes=0-99' 
 check "unsigned media refused"  403 '"error"'            "$BASE/uploads/$CUT/content"
 check "pin a note"              201 '"client_notes":\[{'  "${A[@]}" -H "$JSON" -d '{"t":3,"text":"Cut this pause"}' "$BASE/orders/$ORDER/notes"
 check "approve"                 200 '"amount_inr":1071.43' "${A[@]}" -X POST "$BASE/orders/$ORDER/approve"
+grep -q '"fee_usd":2.25' "$TMP/body" && grep -q '"transfer_id":"RAMP-SIM-' "$TMP/body" \
+  && echo "PASS  payout breakdown (fee, Ramp transfer id)" || { echo "FAIL  payout breakdown"; FAILED=1; }
 check "approve twice is 409"    409 '"error"'            "${A[@]}" -X POST "$BASE/orders/$ORDER/approve"
 check "orders list"             200 "\"id\":\"$ORDER\""  "${A[@]}" "$BASE/orders"
 

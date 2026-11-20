@@ -11,7 +11,7 @@ from app.models import (
     ClientNote, DeliverRequest, Order, OrderRequest, ReviewRequest, ReviewResult,
 )
 from app.payments import escrow
-from app.payments.payouts import create_payout
+from app.payments.payouts import create_payment, create_payout
 from app.payments.pricing import find_package, quote
 from app.ratelimit import check_ai_quota
 
@@ -43,6 +43,7 @@ def create_order(body: OrderRequest, uid: UserId) -> Order:
         note=body.note, total_usd=total_usd, total_inr=total_inr, status="funded",
         revisions_left=BASE_REVISIONS + (1 if "revision" in body.addons else 0),
         due_at=now + timedelta(hours=RUSH_HOURS if body.rush else package.eta_hours),
+        payment=create_payment(body.payment_method, total_usd, total_inr),
         timeline=[escrow.event("funded")], created_at=now,
     )
     repo.save("orders", order)

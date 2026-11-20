@@ -103,6 +103,11 @@ decisions under **Decisions** with a date. Keep it short; move detail to other d
   `USE_VERTEX=true`, because Gemma on Vertex needs its own deployed endpoint. So Cloud Run always
   gets the `gemini-api-key` secret. Cloud project: personal account, credits via the Google
   Developer Program premium benefit (the Google One AI plan itself is not Cloud billing).
+- 2026-11-20: **Payments are a demo UI over simulated records.** Checkout (`js/screens/payments.js`)
+  offers only a test card (•••• 4242) and test UPI, never real card/bank fields, because a judge
+  could type a real card into a public URL. Orders store a `payment` record (`PAY-SIM-…`); approval
+  plays the payout steps and stores fee, FX and a `RAMP-SIM-…` transfer id. Ramp is the payout rail
+  (BMT pays the editor), not the checkout. Ramp appears as plain text only, no logo.
 - 2026-11-20: Mustafa is the first seeded editor (`featured`, listed first, recommended first).
   His credits are empty until he sends real FilmPulse ones; never invent them.
 - 2026-11-20: Deploy = `scripts/deploy.sh` (stages backend + frontend with `deploy/Dockerfile`,

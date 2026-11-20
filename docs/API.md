@@ -190,12 +190,19 @@ Feedback is screened by Gemma first (blocked text is a `422`). Counts against th
 ### `POST /orders/{id}/approve`
 ```json
 {
-  "id": "BMT-2481", "status": "approved",
-  "payout": { "amount_usd": 12.74, "fx_rate": 84.1, "amount_inr": 1071.43, "rail": "ramp", "status": "simulated" }
+  "id": "BMT-7KQ2XDMA", "status": "approved",
+  "payout": { "gross_usd": 14.99, "fee_pct": 15, "fee_usd": 2.25, "amount_usd": 12.74, "fx_rate": 84.1,
+              "amount_inr": 1071.43, "transfer_id": "RAMP-SIM-3F9A1C2B", "eta": "About 1 business day",
+              "rail": "ramp", "status": "simulated", "at": "..." }
 }
 ```
 Returns the full order. Payout = total minus platform fee (`PLATFORM_FEE_PCT`, default 15). FX rate from env
-`DEMO_FX_USD_INR` (fixed for the demo; say so in the UI).
+`DEMO_FX_USD_INR` (fixed for the demo; say so in the UI). The transfer id is simulated; no money moves.
+
+### Demo payment on `POST /orders`
+`payment_method` is `demo_card` (default) or `demo_upi`. The order gets a simulated payment record:
+`"payment": { "method": "Test card ending 4242", "amount_usd": 14.99, "amount_inr": 1198, "reference": "PAY-SIM-…", "status": "held", "simulated": true }`.
+No card or bank details are ever sent or stored; the checkout only offers these demo methods.
 
 ---
 
