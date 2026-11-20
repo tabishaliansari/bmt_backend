@@ -5,9 +5,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-export NVM_DIR="$HOME/.nvm"
-# shellcheck disable=SC1091
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+# firebase-tools lives in nvm's Node 22; add the newest nvm Node to PATH directly
+# (sourcing nvm.sh doesn't activate it reliably in non-interactive shells).
+NVM_NODE_BIN="$(ls -d "$HOME"/.nvm/versions/node/v*/bin 2>/dev/null | sort -V | tail -1 || true)"
+[ -n "$NVM_NODE_BIN" ] && export PATH="$NVM_NODE_BIN:$PATH"
+command -v firebase >/dev/null || { echo "firebase CLI not found. Install it: npm install -g firebase-tools"; exit 1; }
 # The Firebase emulators need Java 21+; use the user-space runtime if the system one is older.
 if [ -x "$HOME/.local/jre21/bin/java" ]; then
   export JAVA_HOME="$HOME/.local/jre21"
