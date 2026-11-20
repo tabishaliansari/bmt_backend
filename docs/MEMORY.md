@@ -108,6 +108,13 @@ decisions under **Decisions** with a date. Keep it short; move detail to other d
   could type a real card into a public URL. Orders store a `payment` record (`PAY-SIM-…`); approval
   plays the payout steps and stores fee, FX and a `RAMP-SIM-…` transfer id. Ramp is the payout rail
   (BMT pays the editor), not the checkout. Ramp appears as plain text only, no logo.
+- 2026-11-20: **First run.** Signed-out visitors land on the welcome page. "I need a video edited" /
+  "I'm an editor" sign in with Google, save the role on the account (`/me`, Firestore `users`), then
+  show that role's 4-step intro once (skippable; "Replay the intro" in You). In the live app the
+  editor area is the honest `S.editorHome`: linked editors (via `EDITOR_ACCOUNTS`) see their storefront
+  and incoming orders; everyone else sees "profile under review". Mock mode keeps the prototype Studio.
+- 2026-11-20: Frontend files are served with `Cache-Control: no-cache` (ETag revalidation), so a
+  redeploy never leaves browsers on stale JavaScript.
 - 2026-11-20: Mustafa is the first seeded editor (`featured`, listed first, recommended first).
   His credits are empty until he sends real FilmPulse ones; never invent them.
 - 2026-11-20: Deploy = `scripts/deploy.sh` (stages backend + frontend with `deploy/Dockerfile`,

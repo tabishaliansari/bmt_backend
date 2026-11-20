@@ -196,6 +196,26 @@ class ReviewRequest(BaseModel):
     client_feedback: str | None = Field(default=None, max_length=1000)
 
 
+# ---------------------------------------------------------------- users
+
+Role = Literal["client", "editor"]
+
+
+class UserProfile(BaseModel):
+    id: str  # Firebase uid
+    email: str = ""
+    name: str = ""
+    role: Role | None = None
+    editor_id: str | None = None  # set only for Google accounts linked to a real editor profile
+    onboarded: dict[str, bool] = {}  # role -> has seen (or skipped) the intro
+    created_at: datetime
+
+
+class ProfileUpdate(BaseModel):
+    role: Role | None = None
+    onboarded_role: Role | None = None  # mark this role's intro as seen
+
+
 # ---------------------------------------------------------------- orders
 
 

@@ -45,6 +45,15 @@ class Settings(BaseSettings):
     firebase_api_key: str = ""  # web API key from the Firebase console; any value with the emulator
     firebase_auth_domain: str = ""  # defaults to <project>.firebaseapp.com
     firebase_auth_emulator_host: str = ""  # e.g. localhost:9099; empty = real Firebase Auth
+    # Google accounts that are real editors: "email:editor_id;email2:editor_id2" (";" or ",")
+    editor_accounts: str = ""
+
+    def editor_for_email(self, email: str) -> str | None:
+        for pair in self.editor_accounts.replace(",", ";").split(";"):
+            account, _, editor_id = pair.strip().partition(":")
+            if account and editor_id and account.lower() == email.lower():
+                return editor_id
+        return None
 
     # Uploads, money, media links
     max_upload_mb: int = 50

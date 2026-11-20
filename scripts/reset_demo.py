@@ -22,6 +22,7 @@ def main() -> None:
     for upload in db.list("uploads"):
         storage.delete(upload["storage_path"])
         files += 1
+    # Profiles (roles, seen intros) are kept on purpose: a reset shouldn't sign anyone out.
     counts = {name: db.delete_all(name) for name in ("orders", "briefs", "uploads", "editors")}
     seed(db)
     print(f"Reset {settings.db}/{settings.storage}: removed {counts} and {files} stored files; editors re-seeded.")

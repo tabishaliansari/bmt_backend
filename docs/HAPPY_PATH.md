@@ -29,7 +29,7 @@ pass on the cloud URL by 18:00; otherwise it goes in the deck as roadmap.
 
 | # | Screen | User action | What happens | Google service | Must show | Pri |
 |---|---|---|---|---|---|---|
-| 0 | Sign in (before going on stage) | **Continue with Google** | Session persists; footage, briefs and orders are private to this account | **Firebase Authentication** | Name in the sidebar | P0 |
+| 0 | Welcome → sign in (before going on stage) | **I need a video edited** → Google sign-in → 4-step intro (or Skip) | Role saved on the account; session persists; footage, briefs and orders are private to this account | **Firebase Authentication**, **Firestore** | Name in the sidebar | P0 |
 | 1 | Discover | Tap **Start with your footage** | Opens the upload screen | **Cloud Run** | Live public URL | P0 |
 | 2 | Start with your footage | Upload `raw_1`, `raw_2`; note: "Launch reel for my cafe, warm and fun, 30 seconds" | Files stored | **Cloud Storage** | Upload progress, thumbnails | P0 |
 | 3 | Start → Brief result | Tap **Write my brief** | **Gemma** screens the note (abuse, personal data), then **Gemini** watches both clips and returns a structured brief | **Gemma**, **Gemini on Vertex AI** | Hook, best moments with timestamps, must-haves, recommended package. Small label "Note checked by Gemma". Under 60 s | P0 (Gemma P1) |

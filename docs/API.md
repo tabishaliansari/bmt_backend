@@ -25,6 +25,16 @@ caller's own uploads, briefs and orders (anyone else's id is a `404`). With `AUT
 development only) every request is one fixed local user. Gemini calls are limited per user
 (`AI_RATE_LIMIT_PER_HOUR`, default 30).
 
+### `GET /me` and `PUT /me`
+The signed-in user's profile, created on first call:
+```json
+{ "id": "<firebase uid>", "email": "...", "name": "...", "role": "client", "editor_id": null,
+  "onboarded": { "client": true }, "created_at": "..." }
+```
+`PUT /me` takes `{ "role": "client" | "editor" }` and/or `{ "onboarded_role": "client" | "editor" }`
+(marks that role's intro as seen). `editor_id` is never set by the client: it comes from the
+server's `EDITOR_ACCOUNTS` (`email:editor_id;...`), which links real editors' Google accounts.
+
 ### `GET /config`
 What the browser needs to start sign-in (all public by design):
 ```json

@@ -62,6 +62,12 @@ if [[ "$AUTH_MODE" == "firebase" ]]; then
   check "bad token rejected"    401 '"error"'          -H 'Authorization: Bearer nope' "$BASE/orders"
 fi
 
+# ---- Profile (role and intro state)
+check "me: profile"            200 '"onboarded":{'      "${A[@]}" "$BASE/me"
+check "me: choose client role" 200 '"role":"client"'   "${A[@]}" -X PUT -H "$JSON" -d '{"role":"client"}' "$BASE/me"
+check "me: intro seen"         200 '"onboarded":{"client":true}' "${A[@]}" -X PUT -H "$JSON" -d '{"onboarded_role":"client"}' "$BASE/me"
+check "me: bad role rejected"  422 '"error"'            "${A[@]}" -X PUT -H "$JSON" -d '{"role":"admin"}' "$BASE/me"
+
 # ---- Uploads
 check "upload a raw clip"      201 '"id":"up_'          "${A[@]}" -F "file=@$TMP/clip.mp4" -F kind=raw "$BASE/uploads"
 check "reject non-video"       415 '"error"'            "${A[@]}" -F "file=@$TMP/notes.txt" -F kind=raw "$BASE/uploads"

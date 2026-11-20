@@ -11,7 +11,7 @@ from starlette.exceptions import HTTPException
 from app.ai.errors import AIConfigError, AIError, AITimeout
 from app.config import get_settings
 from app.db import get_db
-from app.routers import briefs, editors, health, orders, uploads
+from app.routers import briefs, editors, health, me, orders, uploads
 from app.seed import seed
 
 API_PREFIX = "/api/v1"
@@ -45,6 +45,10 @@ def create_app() -> FastAPI:
         response = await call_next(request)
         for name, value in SECURITY_HEADERS.items():
             response.headers.setdefault(name, value)
+        if not request.url.path.startswith(API_PREFIX):
+            # Frontend files: always revalidate (ETag makes it a cheap 304), so a redeploy
+            # never leaves browsers running stale JavaScript.
+            response.headers.setdefault("Cache-Control", "no-cache")
         return response
 
     @app.exception_handler(HTTPException)
@@ -64,7 +68,7 @@ def create_app() -> FastAPI:
     async def validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:
         return error_response(422, "invalid_request", f"Please check: {field_names(exc)}.")
 
-    for router in (health.router, editors.router, uploads.router, briefs.router, orders.router):
+    for router in (health.router, me.router, editors.router, uploads.router, briefs.router, orders.router):
         app.include_router(router, prefix=API_PREFIX)
 
     if settings.frontend_dir.is_dir():

@@ -10,7 +10,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 
 from app.db import get_db
-from app.models import Brief, Editor, Order, Upload
+from app.models import Brief, Editor, Order, Upload, UserProfile
 
 M = TypeVar("M", bound=BaseModel)
 
@@ -22,7 +22,7 @@ def load(collection: str, doc_id: str, model: type[M], label: str, owner: str | 
     return model.model_validate(data)
 
 
-def save(collection: str, record: Editor | Brief | Upload | Order) -> None:
+def save(collection: str, record: Editor | Brief | Upload | Order | UserProfile) -> None:
     get_db().put(collection, record.id, record.model_dump(mode="json"))
 
 

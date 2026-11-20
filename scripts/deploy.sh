@@ -27,6 +27,8 @@ PRO_MODEL="${GEMINI_PRO_MODEL:-gemini-3.8-flash}"
 SCREEN_MODEL="${GEMINI_SCREEN_MODEL:-gemma-4-26b-a4b-it}"
 IMAGE_MODEL="${GEMINI_IMAGE_MODEL:-gemini-3.1-flash-image}"
 FIREBASE_API_KEY="${FIREBASE_API_KEY:-}"
+# Google accounts linked to editor profiles, ";"-separated: "mustafa@gmail.com:mustafa"
+EDITOR_ACCOUNTS="${EDITOR_ACCOUNTS:-}"
 
 [ -d ../frontend ] || { echo "frontend/ must be cloned next to backend/"; exit 1; }
 [ "$STORAGE" != "gcs" ] || [ -n "$GCS_BUCKET" ] || { echo "set GCS_BUCKET (or STORAGE=local)"; exit 1; }
@@ -42,7 +44,7 @@ ENV_VARS="USE_VERTEX=${USE_VERTEX},GCP_PROJECT=${GCP_PROJECT},VERTEX_LOCATION=${
 ENV_VARS+=",STORAGE=${STORAGE},GCS_BUCKET=${GCS_BUCKET},DB=${DB},AUTH=firebase,FIREBASE_API_KEY=${FIREBASE_API_KEY}"
 ENV_VARS+=",GEMINI_FAST_MODEL=${FAST_MODEL},GEMINI_PRO_MODEL=${PRO_MODEL}"
 ENV_VARS+=",GEMINI_SCREEN_MODEL=${SCREEN_MODEL},GEMINI_IMAGE_MODEL=${IMAGE_MODEL}"
-ENV_VARS+=",AI_TIMEOUT_SEC=120,MAX_UPLOAD_MB=30"
+ENV_VARS+=",AI_TIMEOUT_SEC=120,MAX_UPLOAD_MB=30,EDITOR_ACCOUNTS=${EDITOR_ACCOUNTS}"
 SECRETS="MEDIA_SIGNING_KEY=media-signing-key:latest,GEMINI_API_KEY=gemini-api-key:latest"
 
 gcloud run deploy "$SERVICE" \
