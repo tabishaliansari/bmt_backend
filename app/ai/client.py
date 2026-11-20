@@ -5,7 +5,7 @@ from functools import lru_cache
 from google import genai
 from google.genai import types
 
-from app.ai.errors import AIError
+from app.ai.errors import AIConfigError
 from app.config import get_settings
 
 
@@ -15,17 +15,17 @@ def get_client() -> genai.Client:
     http_options = types.HttpOptions(timeout=settings.ai_timeout_sec * 1000)
     if settings.use_vertex:
         if not settings.gcp_project:
-            raise AIError("GCP_PROJECT is not set, so Vertex AI can't be used.")
+            raise AIConfigError("GCP_PROJECT is not set, so Vertex AI can't be used.")
         return genai.Client(
             vertexai=True, project=settings.gcp_project,
             location=settings.vertex_location, http_options=http_options,
         )
     if not settings.gemini_api_key:
-        raise AIError("GEMINI_API_KEY is not set in backend/.env.")
+        raise AIConfigError("GEMINI_API_KEY is not set.")
     return genai.Client(api_key=settings.gemini_api_key, http_options=http_options)
 
 
 def require_model(model: str, env_name: str) -> str:
     if not model:
-        raise AIError(f"{env_name} is not set in backend/.env.")
+        raise AIConfigError(f"{env_name} is not set.")
     return model

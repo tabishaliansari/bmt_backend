@@ -79,6 +79,32 @@ decisions under **Decisions** with a date. Keep it short; move detail to other d
   and cleared once an order is placed with it. The storefront picks the matching package by
   word overlap with `package_title`, falling back to the "best" package in that category.
 - 2026-11-20: All text from users or Gemini goes through `BMT.ui.esc()` before `innerHTML`.
+- 2026-11-20 (Day 1): The happy path is `docs/HAPPY_PATH.md` v2. Dev runs in **WSL**; git on Windows.
+- 2026-11-20: **DB is Firestore** (`DB=firestore`), locally on the Firestore emulator
+  (`FIRESTORE_EMULATOR_HOST`, project `demo-bmt`). SQLite stays as a fallback. Firestore has no
+  insertion order, so routers sort what they show (editors in seed order, orders by date).
+- 2026-11-20: **Auth is Firebase Authentication with Google sign-in** (`AUTH=firebase`), locally on
+  the Auth emulator. Backend verifies the ID token (`app/auth.py`, `UserId` dependency). Uploads,
+  briefs and orders carry `owner`; someone else's id is a 404. `AUTH=off` = one local user (dev only).
+  Frontend: Firebase compat SDK 10.14.1 from gstatic (no build step), config from `GET /config`;
+  private routes (start, brief, orders, order, review) show a sign-in screen first.
+- 2026-11-20: Order ids are random (`BMT-` + 8 chars). Media is served only through signed,
+  expiring links (`GET /uploads/{id}/url`), since `<video>`/`<img>` can't send the auth header.
+  `MEDIA_SIGNING_KEY` must be set on Cloud Run (Secret Manager), or links break across instances.
+- 2026-11-20: Gemini calls are limited per user (`AI_RATE_LIMIT_PER_HOUR`, in-memory per instance).
+  AI config errors return a generic 503; details go to the server log only.
+- 2026-11-20: **Gemma** (`GEMINI_SCREEN_MODEL=gemma-4-26b-a4b-it`) screens the client note and review
+  feedback before Gemini. Gemma on the Gemini API has no JSON mode, so it answers one line
+  (`ALLOW` / `BLOCK: reason`), the one exception to "structured output on every call". Fails open.
+- 2026-11-20: **Nano Banana** (`GEMINI_IMAGE_MODEL=gemini-3.1-flash-image`) drafts a thumbnail via
+  `POST /briefs/{id}/thumbnail`, stored as an upload of kind `thumb`. It needs a billed project:
+  the free API key returns 429 for every image model, so it only works once credits arrive.
+- 2026-11-20: Mustafa is the first seeded editor (`featured`, listed first, recommended first).
+  His credits are empty until he sends real FilmPulse ones; never invent them.
+- 2026-11-20: Deploy = `scripts/deploy.sh` (stages backend + frontend with `deploy/Dockerfile`,
+  then `gcloud run deploy --source`). Cloud Run caps requests at 32 MB, so `MAX_UPLOAD_MB=30` there.
+  `STORAGE=gcs` caches files in `/tmp` and serves them with Range support; Vertex reads large clips
+  by `gs://` URI.
 
 ## Glossary
 
@@ -111,3 +137,12 @@ _(Append here: SDK quirks, model limits, things that broke and how we fixed them
   into the DB from a throwaway script. Never add a fake-AI mode to the product code.
 - Scripted `el.focus()`/`blur()` does nothing while the page isn't focused (e.g. a hidden
   browser pane), so inline-edit saves look broken in automated tests. Dispatch the event instead.
+- firebase-tools 15 needs **Java 21+** for the emulators. WSL has Java 17 and no passwordless
+  sudo, so a Temurin JRE 21 lives in `~/.local/jre21`; `scripts/dev.sh` puts it on PATH.
+  firebase-tools also needs Node 20+: Node 22 is installed with nvm (WSL's system Node is 18).
+- The venue/home link is slow (~40-60 kB/s to PyPI and Adoptium); Gemini calls took up to 190 s.
+  `AI_TIMEOUT_SEC=300` locally for now.
+- `gemini-2.5-pro` and `gemini-3.1-pro-preview` aren't available to the free key, so both
+  `GEMINI_FAST_MODEL` and `GEMINI_PRO_MODEL` are `gemini-3.8-flash` until Vertex is set up.
+- From Git Bash, run WSL scripts with `MSYS_NO_PATHCONV=1 wsl.exe -- bash <script>`; inline
+  `bash -lc "..."` quoting breaks on `$vars` and redirects.

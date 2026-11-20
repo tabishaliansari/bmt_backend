@@ -4,3 +4,6 @@ pydantic>=2.9
 pydantic-settings>=2.6
 google-genai>=1.0
 python-multipart>=0.0.12
+firebase-admin>=6.5
+google-cloud-firestore>=2.19
+google-cloud-storage>=2.18

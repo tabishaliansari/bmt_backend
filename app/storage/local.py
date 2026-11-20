@@ -22,3 +22,6 @@ class LocalStorage:
 
     def media_response(self, storage_path: str, mime: str) -> Response:
         return FileResponse(self.root / storage_path, media_type=mime)
+
+    def delete(self, storage_path: str) -> None:
+        (self.root / storage_path).unlink(missing_ok=True)

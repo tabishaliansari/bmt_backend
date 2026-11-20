@@ -15,13 +15,17 @@ FILE_POLL_SEC = 2
 
 
 def video_part(upload: Upload) -> types.Part:
+    """Small clips inline; larger ones as gs:// on Vertex, or via the Files API otherwise."""
     settings = get_settings()
-    data = get_storage().read(upload.storage_path)
-    if upload.size <= settings.inline_video_max_mb * 1024 * 1024:
-        return types.Part.from_bytes(data=data, mime_type=upload.mime)
-    if settings.use_vertex:
-        raise AIError("Clips over the inline limit need Cloud Storage on Vertex AI (not set up yet).")
-    return uploaded_file_part(data, upload.mime)
+    storage = get_storage()
+    if upload.size > settings.inline_video_max_mb * 1024 * 1024:
+        if settings.use_vertex:
+            gcs_uri = getattr(storage, "gcs_uri", None)
+            if gcs_uri is None:
+                raise AIError("This clip is too large to send inline. Try a shorter clip.")
+            return types.Part.from_uri(file_uri=gcs_uri(upload.storage_path), mime_type=upload.mime)
+        return uploaded_file_part(storage.read(upload.storage_path), upload.mime)
+    return types.Part.from_bytes(data=storage.read(upload.storage_path), mime_type=upload.mime)
 
 
 def uploaded_file_part(data: bytes, mime: str) -> types.Part:

@@ -47,9 +47,14 @@ class SqliteDatabase:
             ).fetchone()
         return json.loads(row[0]) if row else None
 
-    def list(self, collection: str) -> list[dict]:
+    def list(self, collection: str, **equals: str) -> list[dict]:
         with self._connect() as conn:
             rows = conn.execute(
                 "SELECT data FROM docs WHERE collection = ? ORDER BY rowid", (collection,)
             ).fetchall()
-        return [json.loads(r[0]) for r in rows]
+        docs = [json.loads(r[0]) for r in rows]
+        return [d for d in docs if all(d.get(k) == v for k, v in equals.items())]
+
+    def delete_all(self, collection: str) -> int:
+        with self._connect() as conn:
+            return conn.execute("DELETE FROM docs WHERE collection = ?", (collection,)).rowcount

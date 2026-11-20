@@ -39,6 +39,7 @@ class Review(BaseModel):
 
 class Editor(BaseModel):
     id: str
+    featured: bool = False  # demo: the founder's real profile is listed first when it matches
     name: str
     initials: str
     av: int
@@ -102,13 +103,21 @@ class BriefRequest(BaseModel):
 
 class Brief(BaseModel):
     id: str
+    owner: str = ""
     upload_ids: list[str]
     client_note: str
     result: BriefResult
+    screened_by: str | None = None  # Gemma model that checked the client's note
+    thumbnail_upload_id: str | None = None  # Nano Banana thumbnail concept
     created_at: datetime
 
 
-UploadKind = Literal["raw", "cut"]
+class ScreenResult(BaseModel):
+    allowed: bool
+    reason: str = ""
+
+
+UploadKind = Literal["raw", "cut", "thumb"]
 
 
 class UploadOut(BaseModel):
@@ -120,6 +129,7 @@ class UploadOut(BaseModel):
 
 
 class Upload(UploadOut):
+    owner: str = ""
     storage_path: str
     created_at: datetime
 
@@ -216,7 +226,7 @@ class OrderRequest(BaseModel):
     editor_id: str
     package_id: str
     brief_id: str | None = None
-    addons: list[str] = []
+    addons: list[str] = Field(default=[], max_length=10)
     rush: bool = False
     note: str = Field(default="", max_length=2000)
 
@@ -227,10 +237,12 @@ class DeliverRequest(BaseModel):
 
 class Order(BaseModel):
     id: str
+    owner: str = ""
     editor_id: str
     package_id: str
     brief_id: str | None
     brief: BriefResult | None
+    thumbnail_upload_id: str | None = None
     title: str
     g: int
     addons: list[str]

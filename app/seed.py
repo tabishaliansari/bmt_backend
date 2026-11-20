@@ -23,6 +23,22 @@ def review(name: str, av: int, stars: int, text: str, item: str, when: str) -> R
 
 
 EDITORS: list[Editor] = [
+    # The demo editor: co-founder Mustafa Bhagat. TODO before 14:30: replace credit_list,
+    # credits, channels and views with his real FilmPulse work (title, link, views, date).
+    Editor(
+        id="mustafa", featured=True, name="Mustafa Bhagat", initials="MB", av=3, handle="filmpulse",
+        city="India", styles=["Reels", "Cinematic"], categories=["reels", "youtube"], cover=2,
+        rating=4.9, rating_count=48, credits=0, channels=0, views="0", on_time=99,
+        reply="15 min", from_inr=999, days="2 days",
+        packages=[
+            pkg("mustafa", "taste", "Taste test", "15 sec from your own footage. See the style before you commit.", 199, 2.49, 12, 5, "try"),
+            pkg("mustafa", "reel", "Instagram Reel", "Up to 60s · captions · colour grade · 2 revisions", 999, 12.99, 48, 2, "best"),
+            pkg("mustafa", "yt", "YouTube edit", "Up to 12 min · pacing, B-roll, sound design · 2 revisions", 3499, 41.99, 96, 0),
+        ],
+        credit_list=[],
+        reviews=[],
+        work=[2, 7, 0, 5],
+    ),
     Editor(
         id="riya", name="Riya Kapoor", initials="RK", av=0, handle="riyacuts", city="Mumbai",
         styles=["Vlogs", "Reels"], categories=["reels", "youtube"], cover=7,

@@ -14,3 +14,6 @@ class Storage(Protocol):
 
     def media_response(self, storage_path: str, mime: str) -> Response:
         """An HTTP response that plays the file in the browser (supports seeking)."""
+
+    def delete(self, storage_path: str) -> None:
+        """Remove the stored file if it exists (demo reset)."""
