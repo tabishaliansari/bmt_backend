@@ -123,6 +123,10 @@ decisions under **Decisions** with a date. Keep it short; move detail to other d
   gained `accept` (funded → in_progress) and `decline` (funded → refunded); timeline events carry a
   `code`. The client's "Upload the editor's cut" button now only shows in mock mode or with
   `?standin=1` (stage fallback). Clients can view an editor-uploaded cut on their own order.
+- 2026-11-20: **Skeleton loading.** If a screen takes over 120 ms to load, the router shows a
+  shimmer placeholder shaped like it (`BMT.ui.skeleton(kind)`: grid, detail, list, order, doc;
+  mapped per route in `app.js` `SKELETON_ROUTES`). The stack is FastAPI + **plain JavaScript**
+  (not React): say so accurately in the deck.
 - 2026-11-20: Frontend files are served with `Cache-Control: no-cache` (ETag revalidation), so a
   redeploy never leaves browsers on stale JavaScript.
 - 2026-11-20: Mustafa is the first seeded editor (`featured`, listed first, recommended first).
