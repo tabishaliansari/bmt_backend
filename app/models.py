@@ -226,6 +226,7 @@ class TimelineEvent(BaseModel):
     status: OrderStatus
     at: datetime
     label: str
+    code: str = ""  # stable action name: funded, accepted, declined, delivered, changes, approved
 
 
 class Payout(BaseModel):
@@ -249,7 +250,7 @@ class Payment(BaseModel):
     amount_usd: float
     amount_inr: float
     reference: str  # simulated processor reference
-    status: Literal["held"] = "held"
+    status: Literal["held", "released", "refunded"] = "held"
     simulated: bool = True
     at: datetime
 
@@ -276,6 +277,7 @@ class DeliverRequest(BaseModel):
 class Order(BaseModel):
     id: str
     owner: str = ""
+    client_name: str = ""  # shown to the editor; never the client's email
     editor_id: str
     package_id: str
     brief_id: str | None

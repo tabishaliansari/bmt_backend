@@ -1,8 +1,8 @@
 """Simulated escrow: the only place an order's status changes.
 
-funded -> review -> approved (payout created)
+funded -> in_progress (editor accepts) -> review (cut delivered) -> approved (payout created)
 review -> in_progress -> review (client asked for changes)
-funded | in_progress -> refunded (missed deadline, simulated)
+funded -> refunded (editor declines; or a missed deadline, simulated)
 """
 
 from datetime import UTC, datetime
@@ -12,30 +12,52 @@ from fastapi import HTTPException
 
 from app.models import Order, OrderStatus, TimelineEvent
 
-Action = Literal["deliver", "request_changes", "approve", "refund"]
+Action = Literal["accept", "decline", "deliver", "request_changes", "approve", "refund"]
 
 TRANSITIONS: dict[Action, tuple[set[OrderStatus], OrderStatus]] = {
+    "accept": ({"funded"}, "in_progress"),
+    "decline": ({"funded"}, "refunded"),
     "deliver": ({"funded", "in_progress"}, "review"),
     "request_changes": ({"review"}, "in_progress"),
     "approve": ({"review"}, "approved"),
     "refund": ({"funded", "in_progress"}, "refunded"),
 }
 
-LABELS: dict[OrderStatus, str] = {
+LABELS: dict[str, str] = {
     "funded": "Payment held safely",
-    "in_progress": "Editor is working on your notes",
-    "review": "Cut delivered for your review",
-    "approved": "Approved, payment released to the editor",
-    "refunded": "Refunded to you",
+    "accept": "Editor accepted and started editing",
+    "decline": "Editor declined, payment refunded to you",
+    "deliver": "Cut delivered for your review",
+    "request_changes": "Editor is working on your notes",
+    "approve": "Approved, payment released to the editor",
+    "refund": "Refunded to you",
+}
+
+CODES: dict[str, str] = {
+    "funded": "funded", "accept": "accepted", "decline": "declined", "deliver": "delivered",
+    "request_changes": "changes", "approve": "approved", "refund": "refunded",
 }
 
 
-def event(status: OrderStatus) -> TimelineEvent:
-    return TimelineEvent(status=status, at=datetime.now(UTC), label=LABELS[status])
+def event(key: str, status: OrderStatus) -> TimelineEvent:
+    return TimelineEvent(status=status, at=datetime.now(UTC), label=LABELS[key], code=CODES[key])
+
+
+def funded_event() -> TimelineEvent:
+    return event("funded", "funded")
+
+
+def is_accepted(order: Order) -> bool:
+    return any(e.code == "accepted" for e in order.timeline)
 
 
 def transition(order: Order, action: Action) -> Order:
     allowed_from, to = TRANSITIONS[action]
     if order.status not in allowed_from:
         raise HTTPException(409, f"Can't {action.replace('_', ' ')} an order that is '{order.status}'.")
-    return order.model_copy(update={"status": to, "timeline": [*order.timeline, event(to)]})
+    update: dict = {"status": to, "timeline": [*order.timeline, event(action, to)]}
+    if order.payment and action in ("decline", "refund"):
+        update["payment"] = order.payment.model_copy(update={"status": "refunded"})
+    if order.payment and action == "approve":
+        update["payment"] = order.payment.model_copy(update={"status": "released"})
+    return order.model_copy(update=update)

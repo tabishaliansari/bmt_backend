@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException
 from app import repo
 from app.ai.review_copilot import review_order
 from app.ai.screen import screen_text
-from app.auth import UserId
+from app.auth import CurrentIdentity, UserId
 from app.models import (
     ClientNote, DeliverRequest, Order, OrderRequest, ReviewRequest, ReviewResult,
 )
@@ -29,14 +29,16 @@ def new_order_id() -> str:
 
 
 @router.post("", status_code=201)
-def create_order(body: OrderRequest, uid: UserId) -> Order:
+def create_order(body: OrderRequest, identity: CurrentIdentity) -> Order:
+    uid = identity.uid
     editor = repo.get_editor(body.editor_id)
     package = find_package(editor, body.package_id)
     brief = repo.get_brief(body.brief_id, owner=uid) if body.brief_id else None
     total_usd, total_inr = quote(package, body.addons, body.rush)
     now = datetime.now(UTC)
     order = Order(
-        id=new_order_id(), owner=uid, editor_id=editor.id, package_id=package.id,
+        id=new_order_id(), owner=uid, client_name=identity.name or "A client",
+        editor_id=editor.id, package_id=package.id,
         brief_id=brief.id if brief else None, brief=brief.result if brief else None,
         thumbnail_upload_id=brief.thumbnail_upload_id if brief else None,
         title=package.title, g=package.g, addons=list(dict.fromkeys(body.addons)), rush=body.rush,
@@ -44,7 +46,7 @@ def create_order(body: OrderRequest, uid: UserId) -> Order:
         revisions_left=BASE_REVISIONS + (1 if "revision" in body.addons else 0),
         due_at=now + timedelta(hours=RUSH_HOURS if body.rush else package.eta_hours),
         payment=create_payment(body.payment_method, total_usd, total_inr),
-        timeline=[escrow.event("funded")], created_at=now,
+        timeline=[escrow.funded_event()], created_at=now,
     )
     repo.save("orders", order)
     return order
@@ -104,7 +106,8 @@ def review(order_id: str, body: ReviewRequest, uid: UserId) -> ReviewResult:
         verdict, _ = screen_text(body.client_feedback)
         if not verdict.allowed:
             raise HTTPException(422, f"Please rephrase your feedback: {verdict.reason}")
-    result = review_order(order, repo.get_upload(order.cut_upload_id, owner=uid), body.client_feedback)
+    # The cut may have been uploaded by the editor; the order (owned by the caller) links it.
+    result = review_order(order, repo.get_upload(order.cut_upload_id, owner=None), body.client_feedback)
     repo.save("orders", order.model_copy(update={"review": result}))
     return result
 

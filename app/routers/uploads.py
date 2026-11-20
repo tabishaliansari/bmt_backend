@@ -61,8 +61,11 @@ def create_upload(
 
 @router.get("/{upload_id}/url")
 def get_media_url(upload_id: str, uid: UserId) -> dict:
-    """A short-lived link the owner's browser can put straight into <video> or <img>."""
-    repo.get_upload(upload_id, owner=uid)
+    """A short-lived link for <video> or <img>. Allowed for the uploader, and for a client whose
+    own order this file is attached to (the editor's delivered cut, the thumbnail concept)."""
+    upload = repo.get_upload(upload_id, owner=None)
+    if upload.owner != uid and not repo.order_has_media(uid, upload_id):
+        raise HTTPException(404, f"No upload with id '{upload_id}'")
     return {"url": links.media_url(upload_id)}
 
 

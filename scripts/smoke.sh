@@ -32,6 +32,13 @@ new_user() {  # anonymous user on the Auth emulator -> prints an ID token
     "$AUTH_EMULATOR/identitytoolkit.googleapis.com/v1/accounts:signUp?key=demo-key" \
     | grep -o '"idToken":"[^"]*"' | cut -d'"' -f4
 }
+email_user() {  # emulator user with an email (for editor linking) -> prints an ID token
+  curl -s -H "$JSON" -d "{\"email\":\"$1\",\"password\":\"smoke-$RANDOM-pass\",\"returnSecureToken\":true}" \
+    "$AUTH_EMULATOR/identitytoolkit.googleapis.com/v1/accounts:signUp?key=demo-key" \
+    | grep -o '"idToken":"[^"]*"' | cut -d'"' -f4
+}
+# The editor checks need the server started with EDITOR_ACCOUNTS containing this email:mustafa
+SMOKE_EDITOR_EMAIL="${SMOKE_EDITOR_EMAIL:-smoke-editor-$RANDOM@test.bmt}"
 
 AUTH_MODE="$(curl -s "$BASE/config" | grep -o '"auth":"[a-z]*"' | cut -d'"' -f4)"
 if [[ "$AUTH_MODE" == "firebase" ]]; then
@@ -104,6 +111,36 @@ if [[ "$AUTH_MODE" == "firebase" ]]; then
   check "B's order list is empty" 200 '^\[\]$'           "${B[@]}" "$BASE/orders"
   check "B can't get A's media"   404 '"error"'          "${B[@]}" "$BASE/uploads/$CUT/url"
   check "B can't approve A's order" 404 '"error"'        "${B[@]}" -X POST "$BASE/orders/$ORDER/approve"
+fi
+
+# ---- Editor side: needs a server started with EDITOR_ACCOUNTS="$SMOKE_EDITOR_EMAIL:mustafa"
+if [[ "$AUTH_MODE" == "firebase" ]]; then
+  check "non-editor can't see jobs" 403 '"error"'        "${B[@]}" "$BASE/editor/orders"
+  TOKEN_E="$(email_user "$SMOKE_EDITOR_EMAIL")"
+  E=(-H "Authorization: Bearer $TOKEN_E")
+  if curl -s "${E[@]}" "$BASE/me" | grep -q '"editor_id":"mustafa"'; then
+    check "client orders Mustafa"   201 '"client_name"'   "${A[@]}" -H "$JSON" -d '{"editor_id":"mustafa","package_id":"reel"}' "$BASE/orders"
+    JOB="$(id_from_body BMT-)"
+    check "editor sees the job"     200 "\"id\":\"$JOB\"" "${E[@]}" "$BASE/editor/orders"
+    check "editor can't deliver yet" 409 '"error"'        "${E[@]}" -H "$JSON" -d '{"cut_upload_id":"up_x"}' "$BASE/editor/orders/$JOB/deliver"
+    check "editor accepts"          200 '"status":"in_progress"' "${E[@]}" -X POST "$BASE/editor/orders/$JOB/accept"
+    check "client sees accepted"    200 '"code":"accepted"' "${A[@]}" "$BASE/orders/$JOB"
+    check "editor uploads a cut"    201 '"kind":"cut"'    "${E[@]}" -F "file=@$TMP/clip.mp4" -F kind=cut "$BASE/uploads"
+    ECUT="$(id_from_body up_)"
+    check "editor delivers"         200 '"status":"review"' "${E[@]}" -H "$JSON" -d "{\"cut_upload_id\":\"$ECUT\"}" "$BASE/editor/orders/$JOB/deliver"
+    check "client gets the cut link" 200 '"url":'         "${A[@]}" "$BASE/uploads/$ECUT/url"
+    check "client approves"         200 '"transfer_id":"RAMP-SIM-' "${A[@]}" -X POST "$BASE/orders/$JOB/approve"
+    check "editor sees payout"      200 '"amount_inr":'   "${E[@]}" "$BASE/editor/orders/$JOB"
+    check "client orders again"     201 '"client_name"'   "${A[@]}" -H "$JSON" -d '{"editor_id":"mustafa","package_id":"taste"}' "$BASE/orders"
+    JOB2="$(id_from_body BMT-)"
+    check "editor declines"         200 '"status":"refunded"' "${E[@]}" -X POST "$BASE/editor/orders/$JOB2/decline"
+    check "client refunded"         200 '"status":"refunded"' "${A[@]}" "$BASE/orders/$JOB2"
+    check "order with another editor" 201 '"editor_id":"riya"' "${A[@]}" -H "$JSON" -d '{"editor_id":"riya","package_id":"reel"}' "$BASE/orders"
+    OTHER="$(id_from_body BMT-)"
+    check "editor can't read others" 404 '"error"'         "${E[@]}" "$BASE/editor/orders/$OTHER"
+  else
+    echo "SKIP  editor flow (start the server with EDITOR_ACCOUNTS=\"$SMOKE_EDITOR_EMAIL:mustafa\")"
+  fi
 fi
 
 # ---- Real Gemini calls, only when a clip is given

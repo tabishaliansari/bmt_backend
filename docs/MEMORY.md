@@ -113,6 +113,12 @@ decisions under **Decisions** with a date. Keep it short; move detail to other d
   show that role's 4-step intro once (skippable; "Replay the intro" in You). In the live app the
   editor area is the honest `S.editorHome`: linked editors (via `EDITOR_ACCOUNTS`) see their storefront
   and incoming orders; everyone else sees "profile under review". Mock mode keeps the prototype Studio.
+- 2026-11-20 (late): **Real editor side.** Linked editors (`EDITOR_ACCOUNTS`) get a dashboard of
+  orders placed with them and a job page (`#/job/:id`): brief, client note, the client's raw clips,
+  Accept/Decline (decline refunds), upload and deliver the cut, review notes, Ramp payout. Escrow
+  gained `accept` (funded → in_progress) and `decline` (funded → refunded); timeline events carry a
+  `code`. The client's "Upload the editor's cut" button now only shows in mock mode or with
+  `?standin=1` (stage fallback). Clients can view an editor-uploaded cut on their own order.
 - 2026-11-20: Frontend files are served with `Cache-Control: no-cache` (ETag revalidation), so a
   redeploy never leaves browsers on stale JavaScript.
 - 2026-11-20: Mustafa is the first seeded editor (`featured`, listed first, recommended first).

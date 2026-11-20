@@ -11,7 +11,7 @@ from starlette.exceptions import HTTPException
 from app.ai.errors import AIConfigError, AIError, AITimeout
 from app.config import get_settings
 from app.db import get_db
-from app.routers import briefs, editors, health, me, orders, uploads
+from app.routers import briefs, editor_jobs, editors, health, me, orders, uploads
 from app.seed import seed
 
 API_PREFIX = "/api/v1"
@@ -68,7 +68,7 @@ def create_app() -> FastAPI:
     async def validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:
         return error_response(422, "invalid_request", f"Please check: {field_names(exc)}.")
 
-    for router in (health.router, me.router, editors.router, uploads.router, briefs.router, orders.router):
+    for router in (health.router, me.router, editors.router, uploads.router, briefs.router, orders.router, editor_jobs.router):
         app.include_router(router, prefix=API_PREFIX)
 
     if settings.frontend_dir.is_dir():

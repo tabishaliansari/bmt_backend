@@ -35,6 +35,24 @@ The signed-in user's profile, created on first call:
 (marks that role's intro as seen). `editor_id` is never set by the client: it comes from the
 server's `EDITOR_ACCOUNTS` (`email:editor_id;...`), which links real editors' Google accounts.
 
+## Editor side
+
+Only for Google accounts linked to an editor profile via `EDITOR_ACCOUNTS` (else `403`), and
+only for orders placed with that editor (else `404`).
+
+| Route | What |
+|---|---|
+| `GET /editor/orders` | Orders placed with me, newest first (with `client_name`, never the client's email) |
+| `GET /editor/orders/{id}` | One order: brief, note, status, review notes, payout |
+| `GET /editor/orders/{id}/media` | `[{ id, kind, label, filename, url }]`: signed links to the client's raw clips, the thumbnail concept and my delivered cut |
+| `POST /editor/orders/{id}/accept` | `funded → in_progress`; timeline event `code: "accepted"` |
+| `POST /editor/orders/{id}/decline` | `funded → refunded`; the payment record becomes `refunded` |
+| `POST /editor/orders/{id}/deliver` | `{ "cut_upload_id" }` (a `cut` I uploaded): `in_progress → review`. `409` before accepting |
+
+Timeline events now carry a stable `code`: `funded`, `accepted`, `declined`, `delivered`,
+`changes`, `approved`, `refunded`. A client can get a media link (`GET /uploads/{id}/url`) for
+the cut or thumbnail attached to their own order, even though the editor uploaded it.
+
 ### `GET /config`
 What the browser needs to start sign-in (all public by design):
 ```json

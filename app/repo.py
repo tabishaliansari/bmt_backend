@@ -45,3 +45,22 @@ def get_order(order_id: str, owner: str) -> Order:
 
 def list_orders(owner: str) -> list[Order]:
     return [Order.model_validate(d) for d in get_db().list("orders", owner=owner)]
+
+
+def order_has_media(owner: str, upload_id: str) -> bool:
+    """True if one of this client's orders has the upload as its cut or thumbnail."""
+    db = get_db()
+    return bool(db.list("orders", owner=owner, cut_upload_id=upload_id)
+                or db.list("orders", owner=owner, thumbnail_upload_id=upload_id))
+
+
+def list_orders_for_editor(editor_id: str) -> list[Order]:
+    return [Order.model_validate(d) for d in get_db().list("orders", editor_id=editor_id)]
+
+
+def get_order_for_editor(order_id: str, editor_id: str) -> Order:
+    """An order placed with this editor (not necessarily owned by the caller)."""
+    order = load("orders", order_id, Order, "order")
+    if order.editor_id != editor_id:
+        raise HTTPException(404, f"No order with id '{order_id}'")
+    return order
