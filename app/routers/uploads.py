@@ -47,7 +47,7 @@ def store_upload(owner: str, kind: UploadKind, filename: str, mime: str, src: Bi
 
 @router.post("", status_code=201)
 def create_upload(
-    uid: UserId, file: UploadFile = File(...), kind: Literal["raw", "cut"] = Form(...)
+    uid: UserId, file: UploadFile = File(...), kind: Literal["raw", "ref", "cut"] = Form(...)
 ) -> UploadOut:
     max_mb = get_settings().max_upload_mb
     mime = video_mime(file)

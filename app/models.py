@@ -2,8 +2,9 @@
 
 from datetime import datetime
 from typing import Literal
+from urllib.parse import urlparse
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class Package(BaseModel):
@@ -80,6 +81,12 @@ class RecommendedPackage(BaseModel):
     reason: str = Field(description="Why this package fits, one short sentence")
 
 
+class ReferenceInsight(BaseModel):
+    source: str = Field(description="The reference's label exactly as given, e.g. 'Reference 1'")
+    takeaway: str = Field(description="What to borrow from it: pacing, grade, captions, structure, music, one sentence")
+    apply: str = Field(description="How to apply that to the client's footage, one concrete sentence")
+
+
 class BriefResult(BaseModel):
     title: str
     format: BriefFormat
@@ -90,15 +97,33 @@ class BriefResult(BaseModel):
     must_include: list[str]
     questions_for_client: list[str]
     recommended_package: RecommendedPackage
+    references: list[ReferenceInsight] = Field(default=[], description="One per reference given; empty if none")
 
 
 class BriefUpdate(BaseModel):
     result: BriefResult
 
 
+MAX_REFERENCE_LINKS = 3
+
+
 class BriefRequest(BaseModel):
     upload_ids: list[str] = Field(min_length=1, max_length=3)
     client_note: str = Field(default="", max_length=1000)
+    reference_upload_ids: list[str] = Field(default=[], max_length=2)  # clips of work the client likes
+    reference_links: list[str] = Field(default=[], max_length=MAX_REFERENCE_LINKS)  # YouTube, Instagram, any page
+
+    @field_validator("reference_links")
+    @classmethod
+    def http_links_only(cls, links: list[str]) -> list[str]:
+        clean = []
+        for link in links:
+            link = link.strip()
+            parsed = urlparse(link)
+            if len(link) > 300 or parsed.scheme not in ("http", "https") or not parsed.netloc:
+                raise ValueError("each reference must be a full web link (https://...)")
+            clean.append(link)
+        return clean
 
 
 class Brief(BaseModel):
@@ -106,6 +131,8 @@ class Brief(BaseModel):
     owner: str = ""
     upload_ids: list[str]
     client_note: str
+    reference_upload_ids: list[str] = []
+    reference_links: list[str] = []
     result: BriefResult
     screened_by: str | None = None  # Gemma model that checked the client's note
     thumbnail_upload_id: str | None = None  # Nano Banana thumbnail concept
@@ -117,7 +144,7 @@ class ScreenResult(BaseModel):
     reason: str = ""
 
 
-UploadKind = Literal["raw", "cut", "thumb"]
+UploadKind = Literal["raw", "ref", "cut", "thumb"]  # ref: a reference clip the client likes
 
 
 class UploadOut(BaseModel):
@@ -306,6 +333,7 @@ class Order(BaseModel):
     brief_id: str | None
     brief: BriefResult | None
     thumbnail_upload_id: str | None = None
+    reference_links: list[str] = []  # from the brief, so the editor sees what the client likes
     title: str
     g: int
     addons: list[str]

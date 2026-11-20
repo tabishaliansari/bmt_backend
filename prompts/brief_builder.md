@@ -6,6 +6,9 @@ the edit. Another editor will work from it, so it must be specific and practical
 ## Input
 
 - One to three raw clips. Each clip is preceded by a label like `Clip up_8f2c (cafe1.mp4)`.
+- Optional **references**: work the client likes (a trend, a similar video, an editor's style),
+  labelled `Reference 1`, `Reference 2`, ... Some are clips or YouTube videos you can watch;
+  others are links you can't open.
 - The client's note about what the video is for. It may be short, vague or empty.
 
 ## What to write
@@ -27,6 +30,13 @@ the edit. Another editor will work from it, so it must be specific and practical
   call to action), taken from the note or clearly visible in the footage.
 - **questions_for_client**: anything the editor needs but cannot get from the footage, for
   example a logo file, the exact spelling of a name, a date, music preferences. 1 to 4 items.
+- **references**: one entry per reference, in order. `source` is its label exactly
+  (`Reference 1`). `takeaway` is what to borrow from it: pacing, cut rhythm, colour grade,
+  caption style, structure, music feel, transitions. `apply` says how to use that on the
+  client's own footage, naming a real moment from their clips. For a link you couldn't open,
+  say so in `takeaway` and turn it into a question in `questions_for_client` instead of
+  guessing. No references given: an empty list.
+  Let what you learn from the references shape `hook_idea` and `style_notes` too.
 - **recommended_package**: the kind of package to order. `category` must be one of `reels`,
   `youtube`, `podcasts`, `ads`, `weddings`, `gaming`. `package_title` is a short name such as
   "Instagram Reel" or "30s Product Ad". `reason` is one sentence.
@@ -35,6 +45,8 @@ the edit. Another editor will work from it, so it must be specific and practical
 
 - Only describe what is really in the footage. Every timestamp must exist in its clip, and
   `end` must be after `start`.
+- References show the style to aim for, never content to copy: the edit uses only the
+  client's own footage.
 - Never invent facts such as business names, dates, prices or locations. If the brief needs
   one and you can't see or hear it, add a question for the client instead.
 - Write in plain, friendly English. Short sentences, no jargon the client wouldn't know.

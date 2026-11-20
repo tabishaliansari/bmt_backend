@@ -18,25 +18,28 @@ router = APIRouter(prefix="/briefs", tags=["briefs"])
 IMAGE_EXT = {"image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp"}
 
 
-def load_raw_uploads(upload_ids: list[str], uid: str) -> list[Upload]:
+def load_uploads(upload_ids: list[str], uid: str, kind: str) -> list[Upload]:
     uploads = [repo.get_upload(upload_id, owner=uid) for upload_id in upload_ids]
     for upload in uploads:
-        if upload.kind != "raw":
-            raise HTTPException(422, f"Upload '{upload.id}' is not raw footage.")
+        if upload.kind != kind:
+            raise HTTPException(422, f"Upload '{upload.id}' is not a {kind} clip.")
     return uploads
 
 
 @router.post("", status_code=201)
 def create_brief(body: BriefRequest, uid: UserId) -> Brief:
-    uploads = load_raw_uploads(body.upload_ids, uid)
+    uploads = load_uploads(body.upload_ids, uid, "raw")
+    refs = load_uploads(body.reference_upload_ids, uid, "ref")
     check_ai_quota(uid)
-    verdict, screened_by = screen_text(body.client_note)
+    # Gemma screens what the client typed, links included (they're user text too).
+    verdict, screened_by = screen_text(" ".join([body.client_note, *body.reference_links]).strip())
     if not verdict.allowed:
         raise HTTPException(422, f"Please rephrase your note: {verdict.reason}")
-    result = build_brief(uploads, body.client_note)
+    result = build_brief(uploads, body.client_note, refs, body.reference_links)
     brief = Brief(
         id=f"br_{secrets.token_hex(8)}", owner=uid, upload_ids=body.upload_ids,
-        client_note=body.client_note, result=result, screened_by=screened_by,
+        client_note=body.client_note, reference_upload_ids=body.reference_upload_ids,
+        reference_links=body.reference_links, result=result, screened_by=screened_by,
         created_at=datetime.now(UTC),
     )
     repo.save("briefs", brief)

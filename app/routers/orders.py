@@ -41,6 +41,7 @@ def create_order(body: OrderRequest, identity: CurrentIdentity) -> Order:
         editor_id=editor.id, package_id=package.id,
         brief_id=brief.id if brief else None, brief=brief.result if brief else None,
         thumbnail_upload_id=brief.thumbnail_upload_id if brief else None,
+        reference_links=brief.reference_links if brief else [],
         title=package.title, g=package.g, addons=list(dict.fromkeys(body.addons)), rush=body.rush,
         note=body.note, total_usd=total_usd, total_inr=total_inr, status="funded",
         revisions_left=BASE_REVISIONS + (1 if "revision" in body.addons else 0),

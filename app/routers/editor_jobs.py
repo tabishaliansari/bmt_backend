@@ -50,12 +50,13 @@ def get_job(order_id: str, editor: Editor) -> Order:
 
 @router.get("/orders/{order_id}/media")
 def job_media(order_id: str, editor: Editor) -> list[MediaItem]:
-    """Signed links to the client's raw clips, the thumbnail concept and the delivered cut."""
+    """Signed links to the client's raw clips, reference clips, the thumbnail concept and the delivered cut."""
     order = repo.get_order_for_editor(order_id, editor[1])
     items: list[tuple[str, str]] = []
     if order.brief_id:
         brief = repo.load("briefs", order.brief_id, Brief, "brief")
         items += [(upload_id, f"Raw clip {i + 1}") for i, upload_id in enumerate(brief.upload_ids)]
+        items += [(upload_id, f"Reference clip {i + 1}") for i, upload_id in enumerate(brief.reference_upload_ids)]
     if order.thumbnail_upload_id:
         items.append((order.thumbnail_upload_id, "Thumbnail concept"))
     if order.cut_upload_id:

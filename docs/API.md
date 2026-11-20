@@ -87,7 +87,14 @@ Streams the file (supports `Range`, so the review player can seek). `403` withou
 
 ### `POST /briefs`
 ```json
-{ "upload_ids": ["up_8f2c", "up_91aa"], "client_note": "Reel for my cafe launch, fun and fast, 30s" }
+{ "upload_ids": ["up_8f2c", "up_91aa"], "client_note": "Reel for my cafe launch, fun and fast, 30s",
+  "reference_upload_ids": ["up_r1"], "reference_links": ["https://youtu.be/abc123"] }
+```
+References are optional: up to 2 clips uploaded with `kind=ref` and up to 3 `http(s)` links.
+Gemini watches public YouTube links (first 90 s); other links are passed as text. The result
+gains `references: [{ source: "Reference 1", takeaway, apply }]` (clips are numbered first, then links),
+and orders copy `reference_links` for the editor.
+```json
 ```
 Response `201` (can take 10–60 s; frontend shows progress). 1–3 upload ids, all of kind `raw`:
 ```json

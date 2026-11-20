@@ -17,6 +17,7 @@ log = logging.getLogger(__name__)
 T = TypeVar("T", bound=BaseModel)
 
 ATTEMPTS = 2  # first try + one retry on invalid JSON
+OVERLOAD_RETRY_SEC = 3  # wait before retrying a 503 "high demand"
 
 
 def http_timeout_errors() -> tuple[type[Exception], ...]:
@@ -56,13 +57,20 @@ def call_gemini(
     model: str, contents: list[types.Part], config: types.GenerateContentConfig,
     client: genai.Client | None = None,
 ) -> types.GenerateContentResponse:
-    try:
-        return (client or get_client()).models.generate_content(model=model, contents=contents, config=config)
-    except TIMEOUT_ERRORS as exc:
-        raise AITimeout("Gemini took too long to answer. Try a shorter clip.") from exc
-    except errors.APIError as exc:
-        log.warning("Gemini API error %s: %s", exc.code, exc.message)
-        raise AIError(f"Gemini couldn't process this request ({exc.code}). Try a shorter MP4 under 50 MB.") from exc
+    for attempt in range(2):
+        try:
+            return (client or get_client()).models.generate_content(model=model, contents=contents, config=config)
+        except TIMEOUT_ERRORS as exc:
+            raise AITimeout("Gemini took too long to answer. Try a shorter clip.") from exc
+        except errors.APIError as exc:
+            log.warning("Gemini API error %s: %s", exc.code, exc.message)
+            if exc.code == 503 and attempt == 0:
+                time.sleep(OVERLOAD_RETRY_SEC)  # "high demand" spikes are usually brief: one retry
+                continue
+            if exc.code in (429, 503):
+                raise AIError("Gemini is busy right now. Please try again in a minute.") from exc
+            raise AIError(f"Gemini couldn't process this request ({exc.code}). Try a shorter MP4 under 50 MB.") from exc
+    raise AssertionError("unreachable")
 
 
 def parse(response: types.GenerateContentResponse, schema: type[T]) -> T:

@@ -143,6 +143,16 @@ decisions under **Decisions** with a date. Keep it short; move detail to other d
   heading focus after navigation, and the focus trap used by sheets and the tour. Status is never
   colour-only: icons + words, plus `sr-only` state text. Review Copilot also returns an
   `accessibility` check of the cut (captions, readability, contrast, flashing, audio).
+- 2026-11-21: **References.** The client can add up to 3 reference links and 2 reference clips
+  (upload kind `ref`) on the Start screen. Public YouTube links are watched by Gemini directly
+  (`ai/references.py`: `Part` with the YouTube URI, first 90 s only, max 2 per brief); other links
+  (Instagram etc.) go in as text and are passed to the editor. We never fetch user links ourselves
+  (no SSRF). If a watched link fails with a 4xx (private/removed video), the brief retries once
+  with links as text; 5xx/timeouts don't retry. `BriefResult.references` = Gemini's takeaway and
+  how to apply it per reference; orders copy `reference_links`; the editor's job page shows both.
+  Payment model stays full escrow (advance + balance is roadmap).
+- 2026-11-21: Gemini 503 "high demand" is retried once after 3 s, then shown as "Gemini is busy right
+  now". Older models (2.5 flash) are closed to new API users.
 
 ## Glossary
 
