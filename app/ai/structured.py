@@ -5,6 +5,7 @@ import logging
 import time
 from typing import TypeVar
 
+from google import genai
 from google.genai import errors, types
 from pydantic import BaseModel, ValidationError
 
@@ -52,10 +53,11 @@ def generate_json(
 
 
 def call_gemini(
-    model: str, contents: list[types.Part], config: types.GenerateContentConfig
+    model: str, contents: list[types.Part], config: types.GenerateContentConfig,
+    client: genai.Client | None = None,
 ) -> types.GenerateContentResponse:
     try:
-        return get_client().models.generate_content(model=model, contents=contents, config=config)
+        return (client or get_client()).models.generate_content(model=model, contents=contents, config=config)
     except TIMEOUT_ERRORS as exc:
         raise AITimeout("Gemini took too long to answer. Try a shorter clip.") from exc
     except errors.APIError as exc:

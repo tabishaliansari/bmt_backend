@@ -99,6 +99,10 @@ decisions under **Decisions** with a date. Keep it short; move detail to other d
 - 2026-11-20: **Nano Banana** (`GEMINI_IMAGE_MODEL=gemini-3.1-flash-image`) drafts a thumbnail via
   `POST /briefs/{id}/thumbnail`, stored as an upload of kind `thumb`. It needs a billed project:
   the free API key returns 429 for every image model, so it only works once credits arrive.
+- 2026-11-20: Gemma screening always runs on the AI Studio key (`get_api_key_client()`), even with
+  `USE_VERTEX=true`, because Gemma on Vertex needs its own deployed endpoint. So Cloud Run always
+  gets the `gemini-api-key` secret. Cloud project: personal account, credits via the Google
+  Developer Program premium benefit (the Google One AI plan itself is not Cloud billing).
 - 2026-11-20: Mustafa is the first seeded editor (`featured`, listed first, recommended first).
   His credits are empty until he sends real FilmPulse ones; never invent them.
 - 2026-11-20: Deploy = `scripts/deploy.sh` (stages backend + frontend with `deploy/Dockerfile`,

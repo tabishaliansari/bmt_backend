@@ -25,6 +25,17 @@ def get_client() -> genai.Client:
     return genai.Client(api_key=settings.gemini_api_key, http_options=http_options)
 
 
+@lru_cache
+def get_api_key_client() -> genai.Client:
+    """Gemini Developer API client, even in Vertex mode. Used for Gemma, which on Vertex would
+    need its own deployed endpoint; on the Gemini API it is a plain model call."""
+    settings = get_settings()
+    if not settings.gemini_api_key:
+        raise AIConfigError("GEMINI_API_KEY is not set (needed for Gemma screening).")
+    http_options = types.HttpOptions(timeout=settings.ai_timeout_sec * 1000)
+    return genai.Client(api_key=settings.gemini_api_key, http_options=http_options)
+
+
 def require_model(model: str, env_name: str) -> str:
     if not model:
         raise AIConfigError(f"{env_name} is not set.")

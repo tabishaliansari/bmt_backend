@@ -9,6 +9,7 @@ import logging
 
 from google.genai import types
 
+from app.ai.client import get_api_key_client
 from app.ai.errors import AIError
 from app.ai.prompts import load_prompt
 from app.ai.structured import call_gemini
@@ -33,7 +34,7 @@ def screen_text(text: str) -> tuple[ScreenResult, str | None]:
         return ScreenResult(allowed=True), None
     contents = [types.Part.from_text(text=f"{load_prompt('screen')}\n\nText to check:\n{text.strip()}")]
     try:
-        response = call_gemini(model, contents, types.GenerateContentConfig(temperature=0))
+        response = call_gemini(model, contents, types.GenerateContentConfig(temperature=0), client=get_api_key_client())
     except AIError as exc:
         log.warning("Gemma screening skipped: %s", type(exc).__name__)
         return ScreenResult(allowed=True), None

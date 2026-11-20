@@ -7,7 +7,8 @@
 #   GCP_PROJECT=my-project GCS_BUCKET=bmt-uploads-xyz bash scripts/deploy.sh
 #
 # Secrets come from Secret Manager (create them once):
-#   gemini-api-key     only if USE_VERTEX=false
+#   gemini-api-key     AI Studio key: Gemma screening always uses it (Gemma on Vertex would
+#                      need its own endpoint); Gemini uses it too when USE_VERTEX=false
 #   media-signing-key  any long random string, e.g. `openssl rand -hex 32`
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -42,8 +43,7 @@ ENV_VARS+=",STORAGE=${STORAGE},GCS_BUCKET=${GCS_BUCKET},DB=${DB},AUTH=firebase,F
 ENV_VARS+=",GEMINI_FAST_MODEL=${FAST_MODEL},GEMINI_PRO_MODEL=${PRO_MODEL}"
 ENV_VARS+=",GEMINI_SCREEN_MODEL=${SCREEN_MODEL},GEMINI_IMAGE_MODEL=${IMAGE_MODEL}"
 ENV_VARS+=",AI_TIMEOUT_SEC=120,MAX_UPLOAD_MB=30"
-SECRETS="MEDIA_SIGNING_KEY=media-signing-key:latest"
-[ "$USE_VERTEX" = "true" ] || SECRETS+=",GEMINI_API_KEY=gemini-api-key:latest"
+SECRETS="MEDIA_SIGNING_KEY=media-signing-key:latest,GEMINI_API_KEY=gemini-api-key:latest"
 
 gcloud run deploy "$SERVICE" \
   --project "$GCP_PROJECT" --region "$REGION" --source "$STAGE" \
