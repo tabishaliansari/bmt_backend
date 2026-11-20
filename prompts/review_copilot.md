@@ -24,3 +24,20 @@ way a fair, experienced reviewer would: specific, constructive, never vague.
   is an issue; if it didn't, it isn't.
 - Be kind and specific: "Captions disappear between 0:12 and 0:18" beats "captions need work".
 - Plain English, short sentences, no jargon a client wouldn't know.
+
+## Accessibility checks
+
+Also check the cut for people who are deaf, hard of hearing, low-vision or light-sensitive.
+Return **accessibility** with exactly one entry for each of these, in this order:
+
+- **captions**: is all speech captioned? (No speech at all: passed, say so.)
+- **caption_readability**: are captions big enough, on screen long enough, and readable against
+  the footage behind them?
+- **text_contrast**: is every on-screen text (titles, prices, call to action) readable against
+  its background?
+- **flashing**: does anything flash more than 3 times in one second (a seizure risk)?
+- **audio_clarity**: is speech clear over the music?
+
+`passed` is true only if the whole cut passes. `detail` says what you saw, in one short
+sentence. If it fails, set `timestamp_sec` to the first place it happens, and also add a
+note for it in **notes**.

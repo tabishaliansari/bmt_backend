@@ -39,7 +39,7 @@ def fresh_review(order: Order, cut: Upload, keep: list[ReviewNote]) -> ReviewRes
     ai = generate_json(model, load_prompt("review_copilot"), cut_parts(order, cut), ReviewAI, task="review")
     return ReviewResult(
         overall_match=ai.overall_match, summary=ai.summary, checklist=ai.checklist,
-        notes=by_time([*tagged(ai.notes, "ai"), *keep]),
+        notes=by_time([*tagged(ai.notes, "ai"), *keep]), accessibility=ai.accessibility,
     )
 
 

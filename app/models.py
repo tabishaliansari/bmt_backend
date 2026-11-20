@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Package(BaseModel):
@@ -174,11 +174,22 @@ class ReviewNote(ReviewNoteAI):
     source: Literal["ai", "client"]
 
 
+A11yCheckName = Literal["captions", "caption_readability", "text_contrast", "flashing", "audio_clarity"]
+
+
+class AccessibilityCheck(BaseModel):
+    check: A11yCheckName
+    passed: bool
+    detail: str = Field(description="What you saw or heard, one short sentence")
+    timestamp_sec: int | None = Field(default=None, description="Second where the problem is, if it fails")
+
+
 class ReviewAI(BaseModel):
     overall_match: int = Field(ge=0, le=100, description="How well the cut matches the brief, 0-100")
     summary: str = Field(description="One sentence verdict")
     checklist: list[ChecklistItem]
     notes: list[ReviewNoteAI]
+    accessibility: list[AccessibilityCheck] = Field(description="One entry per accessibility check")
 
 
 class FeedbackAI(BaseModel):
@@ -190,6 +201,7 @@ class ReviewResult(BaseModel):
     summary: str
     checklist: list[ChecklistItem]
     notes: list[ReviewNote]
+    accessibility: list[AccessibilityCheck] = []
 
 
 class ReviewRequest(BaseModel):
@@ -201,6 +213,15 @@ class ReviewRequest(BaseModel):
 Role = Literal["client", "editor"]
 
 
+class A11yPrefs(BaseModel):
+    """Display settings that follow the account across devices."""
+    model_config = ConfigDict(extra="forbid")
+    large_text: bool = False
+    high_contrast: bool = False
+    readable_font: bool = False
+    reduce_motion: bool = False
+
+
 class UserProfile(BaseModel):
     id: str  # Firebase uid
     email: str = ""
@@ -208,12 +229,14 @@ class UserProfile(BaseModel):
     role: Role | None = None
     editor_id: str | None = None  # set only for Google accounts linked to a real editor profile
     onboarded: dict[str, bool] = {}  # role -> has seen (or skipped) the intro
+    a11y: A11yPrefs = A11yPrefs()
     created_at: datetime
 
 
 class ProfileUpdate(BaseModel):
     role: Role | None = None
     onboarded_role: Role | None = None  # mark this role's intro as seen
+    a11y: A11yPrefs | None = None
 
 
 # ---------------------------------------------------------------- orders

@@ -135,6 +135,14 @@ decisions under **Decisions** with a date. Keep it short; move detail to other d
   then `gcloud run deploy --source`). Cloud Run caps requests at 32 MB, so `MAX_UPLOAD_MB=30` there.
   `STORAGE=gcs` caches files in `/tmp` and serves them with Range support; Vertex reads large clips
   by `gs://` URI.
+- 2026-11-21: **Accessibility.** Lighthouse accessibility = 100 on Welcome, Discover, Start, Orders,
+  storefront, You and Studio. Rules: accent/verified/safe as **text** use `--cut-ink`,
+  `--trust-ink`, `--safe-ink` (AA 4.5:1); `--cut` itself is for fills and icons only.
+  `js/a11y.js` owns display settings (body classes `A-large`, `A-contrast`, `A-font`, `A-motion`;
+  saved on `/me` `a11y` and in localStorage), the live region (`BMT.a11y.announce`), skip link,
+  heading focus after navigation, and the focus trap used by sheets and the tour. Status is never
+  colour-only: icons + words, plus `sr-only` state text. Review Copilot also returns an
+  `accessibility` check of the cut (captions, readability, contrast, flashing, audio).
 
 ## Glossary
 

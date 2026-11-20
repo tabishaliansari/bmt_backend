@@ -1,4 +1,4 @@
-"""The signed-in user's profile: role (client or editor) and which intros they've seen."""
+"""The signed-in user's profile: role (client or editor), which intros they've seen, display settings."""
 
 from datetime import UTC, datetime
 
@@ -41,6 +41,8 @@ def update_me(body: ProfileUpdate, identity: CurrentIdentity) -> UserProfile:
         update["role"] = body.role
     if body.onboarded_role:
         update["onboarded"] = {**profile.onboarded, body.onboarded_role: True}
+    if body.a11y:
+        update["a11y"] = body.a11y
     profile = profile.model_copy(update=update)
     repo.save("users", profile)
     return profile

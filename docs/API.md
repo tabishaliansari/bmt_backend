@@ -29,10 +29,12 @@ development only) every request is one fixed local user. Gemini calls are limite
 The signed-in user's profile, created on first call:
 ```json
 { "id": "<firebase uid>", "email": "...", "name": "...", "role": "client", "editor_id": null,
-  "onboarded": { "client": true }, "created_at": "..." }
+  "onboarded": { "client": true },
+  "a11y": { "large_text": false, "high_contrast": false, "readable_font": false, "reduce_motion": false },
+  "created_at": "..." }
 ```
-`PUT /me` takes `{ "role": "client" | "editor" }` and/or `{ "onboarded_role": "client" | "editor" }`
-(marks that role's intro as seen). `editor_id` is never set by the client: it comes from the
+`PUT /me` takes `{ "role": "client" | "editor" }`, `{ "onboarded_role": "client" | "editor" }`
+(marks that role's intro as seen) and/or `{ "a11y": { ...display settings } }` (unknown keys are a `422`). `editor_id` is never set by the client: it comes from the
 server's `EDITOR_ACCOUNTS` (`email:editor_id;...`), which links real editors' Google accounts.
 
 ## Editor side
@@ -206,10 +208,16 @@ Client asks for changes: `review → in_progress`, `revisions_left` minus one (`
   "notes": [
     { "timestamp_sec": 12, "issue": "Captions disappear", "suggestion": "Keep captions through 0:12–0:18", "severity": "high", "source": "ai" },
     { "timestamp_sec": 3,  "issue": "Client: make it more cinematic", "suggestion": "Add a slow push-in and a warmer grade on the opening pour", "severity": "medium", "source": "client" }
+  ],
+  "accessibility": [
+    { "check": "captions", "passed": false, "detail": "Speech between 0:12 and 0:18 has no captions.", "timestamp_sec": 12 },
+    { "check": "flashing", "passed": true, "detail": "No rapid flashing anywhere in the cut.", "timestamp_sec": null }
   ]
 }
 ```
 `severity` is `low | medium | high`. `source` is `ai | client`. Saved on the order.
+`accessibility` has one entry per check: `captions | caption_readability | text_contrast | flashing | audio_clarity`
+(same Gemini call as the review, no extra cost).
 Only allowed while the order is in `review` with a delivered cut (`409` otherwise).
 Without feedback it (re)runs the review on `GEMINI_PRO_MODEL`, keeping `client` notes. With
 feedback it adds `client` notes via `GEMINI_FAST_MODEL`, running the review first if there is none.
