@@ -113,6 +113,18 @@ def review(order_id: str, body: ReviewRequest, uid: UserId) -> ReviewResult:
     return result
 
 
+@router.post("/{order_id}/cancel")
+def cancel(order_id: str, uid: UserId) -> Order:
+    """Cancel and refund (simulated). Only before the editor accepts: after that they've started
+    work, so the client asks for changes instead."""
+    order = repo.get_order(order_id, owner=uid)
+    if order.status in ("in_progress", "review"):
+        raise HTTPException(409, "Your editor has already started, so this order can't be cancelled. Ask for changes instead.")
+    order = escrow.transition(order, "cancel")
+    repo.save("orders", order)
+    return order
+
+
 @router.post("/{order_id}/approve")
 def approve(order_id: str, uid: UserId) -> Order:
     order = escrow.transition(repo.get_order(order_id, owner=uid), "approve")

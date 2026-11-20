@@ -151,6 +151,11 @@ decisions under **Decisions** with a date. Keep it short; move detail to other d
   with links as text; 5xx/timeouts don't retry. `BriefResult.references` = Gemini's takeaway and
   how to apply it per reference; orders copy `reference_links`; the editor's job page shows both.
   Payment model stays full escrow (advance + balance is roadmap).
+- 2026-11-21: **Cancel and refund** (`POST /orders/{id}/cancel`, escrow action `cancel`): the client
+  can cancel only while the order is `funded` (before the editor accepts), so editors are never
+  left unpaid for started work. The order page's "⋯" menu only shows then; the prototype's dead
+  "Extend deadline" / "Message" items are gone. Refunded orders show a short timeline
+  (placed → cancelled/declined → refunded).
 - 2026-11-21: Gemini 503 "high demand" is retried once after 3 s, then shown as "Gemini is busy right
   now". Older models (2.5 flash) are closed to new API users.
 

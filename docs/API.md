@@ -230,6 +230,11 @@ Without feedback it (re)runs the review on `GEMINI_PRO_MODEL`, keeping `client` 
 feedback it adds `client` notes via `GEMINI_FAST_MODEL`, running the review first if there is none.
 Feedback is screened by Gemma first (blocked text is a `422`). Counts against the AI limit.
 
+### `POST /orders/{id}/cancel`
+The client cancels and is refunded (simulated): `funded` → `refunded`, payment `refunded`, timeline
+event `code: "cancelled"`. Only before the editor accepts; once they've started (`in_progress`,
+`review`) it's a `409` ("ask for changes instead"). Someone else's order is a `404`.
+
 ### `POST /orders/{id}/approve`
 ```json
 {

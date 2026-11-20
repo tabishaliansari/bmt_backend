@@ -12,11 +12,12 @@ from fastapi import HTTPException
 
 from app.models import Order, OrderStatus, TimelineEvent
 
-Action = Literal["accept", "decline", "deliver", "request_changes", "approve", "refund"]
+Action = Literal["accept", "decline", "cancel", "deliver", "request_changes", "approve", "refund"]
 
 TRANSITIONS: dict[Action, tuple[set[OrderStatus], OrderStatus]] = {
     "accept": ({"funded"}, "in_progress"),
     "decline": ({"funded"}, "refunded"),
+    "cancel": ({"funded"}, "refunded"),  # client, only before the editor accepts
     "deliver": ({"funded", "in_progress"}, "review"),
     "request_changes": ({"review"}, "in_progress"),
     "approve": ({"review"}, "approved"),
@@ -27,6 +28,7 @@ LABELS: dict[str, str] = {
     "funded": "Payment held safely",
     "accept": "Editor accepted and started editing",
     "decline": "Editor declined, payment refunded to you",
+    "cancel": "You cancelled, payment refunded to you",
     "deliver": "Cut delivered for your review",
     "request_changes": "Editor is working on your notes",
     "approve": "Approved, payment released to the editor",
@@ -34,7 +36,7 @@ LABELS: dict[str, str] = {
 }
 
 CODES: dict[str, str] = {
-    "funded": "funded", "accept": "accepted", "decline": "declined", "deliver": "delivered",
+    "funded": "funded", "accept": "accepted", "decline": "declined", "cancel": "cancelled", "deliver": "delivered",
     "request_changes": "changes", "approve": "approved", "refund": "refunded",
 }
 
@@ -56,7 +58,7 @@ def transition(order: Order, action: Action) -> Order:
     if order.status not in allowed_from:
         raise HTTPException(409, f"Can't {action.replace('_', ' ')} an order that is '{order.status}'.")
     update: dict = {"status": to, "timeline": [*order.timeline, event(action, to)]}
-    if order.payment and action in ("decline", "refund"):
+    if order.payment and action in ("decline", "cancel", "refund"):
         update["payment"] = order.payment.model_copy(update={"status": "refunded"})
     if order.payment and action == "approve":
         update["payment"] = order.payment.model_copy(update={"status": "released"})
