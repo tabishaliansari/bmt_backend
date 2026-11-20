@@ -110,7 +110,11 @@ decisions under **Decisions** with a date. Keep it short; move detail to other d
   (BMT pays the editor), not the checkout. Ramp appears as plain text only, no logo.
 - 2026-11-20: **First run.** Signed-out visitors land on the welcome page. "I need a video edited" /
   "I'm an editor" sign in with Google, save the role on the account (`/me`, Firestore `users`), then
-  show that role's 4-step intro once (skippable; "Replay the intro" in You). In the live app the
+  land on the real home screen with a **product tour** (`js/tour.js`: spotlight + tooltip on real
+  elements, Back/Next/Skip, arrows/Esc). It runs once per role (`?tour=1` starts it; "Take the
+  tour" in You/Profile replays it). Client tour: 6 stops on Discover; editor: 5 on the dashboard,
+  3 on "profile under review". The dim layer is four plain rectangles around the target, not a
+  giant box-shadow (doesn't paint on high-density phones). In the live app the
   editor area is the honest `S.editorHome`: linked editors (via `EDITOR_ACCOUNTS`) see their storefront
   and incoming orders; everyone else sees "profile under review". Mock mode keeps the prototype Studio.
 - 2026-11-20 (late): **Real editor side.** Linked editors (`EDITOR_ACCOUNTS`) get a dashboard of
